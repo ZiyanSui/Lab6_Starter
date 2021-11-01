@@ -1,2 +1,2 @@
 # Lab 6 - Starter
-[Link](https://ziyansui.github.io/Lab6_Starter/) for website
+Website link is https://ziyansui.github.io/Lab6_Starter/, please copy and paste it in a new tab. Thank you.

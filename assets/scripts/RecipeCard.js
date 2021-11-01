@@ -1,8 +1,10 @@
 class RecipeCard extends HTMLElement {
   constructor() {
     // Part 1 Expose - TODO
-
     // You'll want to attach the shadow DOM here
+    super();
+    // Elements of the shadow root are accessible from JS outside the root
+    this.attachShadow({mode: 'open'}); // Not sure
   }
 
   set data(data) {
@@ -18,7 +20,6 @@ class RecipeCard extends HTMLElement {
       a {
         text-decoration: none;
       }
-
       a:hover {
         text-decoration: underline;
       }
@@ -34,7 +35,6 @@ class RecipeCard extends HTMLElement {
         padding: 0 16px 16px 16px;
         width: 178px;
       }
-
       div.rating {
         align-items: center;
         column-gap: 5px;
@@ -47,7 +47,6 @@ class RecipeCard extends HTMLElement {
         object-fit: scale-down;
         width: 78px;
       }
-
       article > img {
         border-top-left-radius: 8px;
         border-top-right-radius: 8px;
@@ -56,7 +55,6 @@ class RecipeCard extends HTMLElement {
         margin-left: -16px;
         width: calc(100% + 32px);
       }
-
       p.ingredients {
         height: 32px;
         line-height: 16px;
@@ -67,7 +65,6 @@ class RecipeCard extends HTMLElement {
       p.organization {
         color: black !important;
       }
-
       p.title {
         display: -webkit-box;
         font-size: 16px;
@@ -77,7 +74,6 @@ class RecipeCard extends HTMLElement {
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
       }
-
       p:not(.title), span, time {
         color: #70757A;
         font-size: 12px;
@@ -100,6 +96,92 @@ class RecipeCard extends HTMLElement {
     // created in the constructor()
 
     // Part 1 Expose - TODO
+    let img = document.createElement('img');
+    img.src = searchForKey(data, "thumbnailUrl");
+    let title = searchForKey(data, "headline");
+    img.alt = title;
+    card.appendChild(img);
+
+    let parameter = document.createElement('p');
+    parameter.className = "title";
+    let obj = document.createElement('a');
+
+    obj.href = getUrl(data);
+    obj.innerHTML = title;
+    parameter.appendChild(obj);
+    card.appendChild(parameter);
+    
+    let organization = document.createElement('p');
+    organization.className = "organization";
+    let org_name = getOrganization(data);
+    organization.innerText = org_name;
+    card.appendChild(organization);
+
+    let rate = document.createElement('div');
+    rate.className = "rating";
+    let span = document.createElement('span');
+
+    let rating = searchForKey(data,"ratingValue");
+
+    if(rating == undefined){
+      span.innerHTML = "No Reviews";
+      rate.appendChild(span);
+    }
+    else{
+      rating = Math.round(rating);
+      span.innerHTML = rating;
+      rate.appendChild(span);
+
+      let rating_img = document.createElement('img');
+      let src;
+      let alt;
+      switch(rating){
+        case 5:
+          src = "assets/images/icons/5-star.svg";
+          alt = "5";
+          break;
+        case 4:
+          src = "assets/images/icons/4-star.svg";
+          alt = "4";
+          break;
+        case 3:
+          src = "assets/images/icons/3-star.svg";
+          alt = "3";
+          break;
+        case 2:
+          src = "assets/images/icons/2-star.svg";
+          alt = "2";
+          break;
+        case 1:
+          src = "assets/images/icons/1-star.svg";
+          alt = "1";
+          break;
+        case 0:
+          src = "assets/images/icons/0-star.svg";
+          alt = "0";
+          break;
+      }
+      rating_img.src = src;
+      rating_img.alt = alt;
+      rate.appendChild(rating_img);
+
+      let num = document.createElement('span');
+      num.innerHTML = "("+searchForKey(data,"ratingCount")+")";
+      rate.appendChild(num);
+    }
+    card.appendChild(rate);
+
+    let ingredient = document.createElement("p");
+    ingredient.className = "ingredients";
+    ingredient.innerHTML = createIngredientList(searchForKey(data, "recipeIngredient"));
+    card.appendChild(ingredient);
+
+    let time = document.createElement('time');
+    time.innerHTML = convertTime(searchForKey(data,"totalTime"));
+    card.appendChild(time);
+
+    this.shadowRoot.appendChild(card);
+    this.shadowRoot.appendChild(styleElem);
   }
 }
 
@@ -112,12 +194,12 @@ class RecipeCard extends HTMLElement {
 
 /**
  * Recursively search for a key nested somewhere inside an object
- * @param {Object} object the object with which you'd like to search
- * @param {String} key the key that you are looking for in the object
+ * @parameterm {Object} object the object with which you'd like to search
+ * @parameterm {String} key the key that you are looking for in the object
  * @returns {*} the value of the found key
  */
 function searchForKey(object, key) {
-  var value;
+  let value;
   Object.keys(object).some(function (k) {
     if (k === key) {
       value = object[k];
@@ -133,7 +215,7 @@ function searchForKey(object, key) {
 
 /**
  * Extract the URL from the given recipe schema JSON object
- * @param {Object} data Raw recipe JSON to find the URL of
+ * @parameterm {Object} data Raw recipe JSON to find the URL of
  * @returns {String} If found, it returns the URL as a string, otherwise null
  */
 function getUrl(data) {
@@ -149,8 +231,8 @@ function getUrl(data) {
 /**
  * Similar to getUrl(), this function extracts the organizations name from the
  * schema JSON object. It's not in a standard location so this function helps.
- * @param {Object} data Raw recipe JSON to find the org string of
- * @returns {String} If found, it retuns the name of the org as a string, otherwise null
+ * @parameterm {Object} data Raw recipe JSON to find the organization string of
+ * @returns {String} If found, it retuns the name of the organization as a string, otherwise null
  */
 function getOrganization(data) {
   if (data.publisher?.name) return data.publisher?.name;
@@ -167,7 +249,7 @@ function getOrganization(data) {
 /**
  * Converts ISO 8061 time strings to regular english time strings.
  * Not perfect but it works for this lab
- * @param {String} time time string to format
+ * @parameterm {String} time time string to format
  * @return {String} formatted time string
  */
 function convertTime(time) {
@@ -194,10 +276,10 @@ function convertTime(time) {
 
 /**
  * Takes in a list of ingredients raw from imported data and returns a neatly
- * formatted comma separated list.
- * @param {Array} ingredientArr The raw unprocessed array of ingredients from the
+ * formatted comma separameterted list.
+ * @parameterm {Array} ingredientArr The raw unprocessed array of ingredients from the
  *                              imported data
- * @return {String} the string comma separate list of ingredients from the array
+ * @return {String} the string comma separameterte list of ingredients from the array
  */
 function createIngredientList(ingredientArr) {
   let finalIngredientList = '';
@@ -207,7 +289,7 @@ function createIngredientList(ingredientArr) {
    * This isn't perfect, it makes the assumption that there will always be a quantity
    * (sometimes there isn't, so this would fail on something like '2 apples' or 'Some olive oil').
    * For the purposes of this lab you don't have to worry about those cases.
-   * @param {String} ingredient the raw ingredient string you'd like to process
+   * @parameterm {String} ingredient the raw ingredient string you'd like to process
    * @return {String} the ingredient without the measurement & quantity 
    * (e.g. '1 cup flour' returns 'flour')
    */
